@@ -185,7 +185,7 @@ def main():
 	state["inputCondition"] = threading.Condition()
 	state["sendMessageLock"] = threading.Lock()
 	state["username"] = input("Welcome to TChat! Please enter your username: ")
-	state["groupname"] = input("Please enter the name of the group: ")
+	state["groupname"] = input("Please enter the name of the group you want to create or input the name of the group you want to join: ")
 	state["alive"] = False
 	state["joinDisconnect"] = False
 	state["inputMessage"] = True
