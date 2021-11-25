@@ -20,7 +20,9 @@ If a group with the specified name does not exist, a new group is automatically 
 
 
 Type anything to send a message or use the following commands:
-Command	Behaviour
+
+## Command	Behaviour
+
 /1	View pending join requests**
 
 /2	Approve pending join requests**
