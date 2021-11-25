@@ -1,199 +1,237 @@
 import socket
 import threading
 import pickle
-import os
 import sys
 
-groups = {}
-fileTransferCondition = threading.Condition()
+state = {}
 
-class Group:
-	def __init__(self,admin,client):
-		self.admin = admin
-		self.clients = {}
-		self.offlineMessages = {}
-		self.allMembers = set()
-		self.onlineMembers = set()
-		self.joinRequests = set()
-		self.waitClients = {}
-
-		self.clients[admin] = client
-		self.allMembers.add(admin)
-		self.onlineMembers.add(admin)
-
-	def disconnect(self,username):
-		self.onlineMembers.remove(username)
-		del self.clients[username]
-	
-	def connect(self,username,client):
-		self.onlineMembers.add(username)
-		self.clients[username] = client
-
-	def sendMessage(self,message,username):
-		for member in self.onlineMembers:
-			if member != username:
-				self.clients[member].send(bytes(username + ": " + message,"utf-8"))
-
-def pyconChat(client, username, groupname):
+def serverListen(serverSocket):
 	while True:
-		msg = client.recv(1024).decode("utf-8")
+		msg = serverSocket.recv(1024).decode("utf-8")
 		if msg == "/viewRequests":
-			client.send(b"/viewRequests")
-			client.recv(1024).decode("utf-8")
-			if username == groups[groupname].admin:
-				client.send(b"/sendingData")
-				client.recv(1024)
-				client.send(pickle.dumps(groups[groupname].joinRequests))
-			else:
-				client.send(b"You're not an admin.")
-		elif msg == "/approveRequest":
-			client.send(b"/approveRequest")
-			client.recv(1024).decode("utf-8")
-			if username == groups[groupname].admin:
-				client.send(b"/proceed")
-				usernameToApprove = client.recv(1024).decode("utf-8")
-				if usernameToApprove in groups[groupname].joinRequests:
-					groups[groupname].joinRequests.remove(usernameToApprove)
-					groups[groupname].allMembers.add(usernameToApprove)
-					if usernameToApprove in groups[groupname].waitClients:
-						groups[groupname].waitClients[usernameToApprove].send(b"/accepted")
-						groups[groupname].connect(usernameToApprove,groups[groupname].waitClients[usernameToApprove])
-						del groups[groupname].waitClients[usernameToApprove]
-					print("Member Approved:",usernameToApprove,"| Group:",groupname)
-					client.send(b"User has been added to the group.")
+			serverSocket.send(bytes(".","utf-8"))
+			response = serverSocket.recv(1024).decode("utf-8")
+			if response == "/sendingData":
+				serverSocket.send(b"/readyForData")
+				data = pickle.loads(serverSocket.recv(1024))
+				if data == set():
+					print("No pending requests.")
 				else:
-					client.send(b"The user has not requested to join.")
+					print("Pending Requests:")
+					for element in data:
+						print(element)
 			else:
-				client.send(b"You're not an admin.")
+				print(response)
+		elif msg == "/approveRequest":
+			serverSocket.send(bytes(".","utf-8"))
+			response = serverSocket.recv(1024).decode("utf-8")
+			if response == "/proceed":
+				state["inputMessage"] = False
+				print("Please enter the username to approve: ")
+				with state["inputCondition"]:
+					state["inputCondition"].wait()
+				state["inputMessage"] = True
+				serverSocket.send(bytes(state["userInput"],"utf-8"))
+				print(serverSocket.recv(1024).decode("utf-8"))
+			else:
+				print(response)
 		elif msg == "/disconnect":
-			client.send(b"/disconnect")
-			client.recv(1024).decode("utf-8")
-			groups[groupname].disconnect(username)
-			print("User Disconnected:",username,"| Group:",groupname)
+			serverSocket.send(bytes(".","utf-8"))
+			state["alive"] = False
 			break
 		elif msg == "/messageSend":
-			client.send(b"/messageSend")
-			message = client.recv(1024).decode("utf-8")
-			groups[groupname].sendMessage(message,username)
-		elif msg == "/waitDisconnect":
-			client.send(b"/waitDisconnect")
-			del groups[groupname].waitClients[username]
-			print("Waiting Client:",username,"Disconnected")
-			break
+			serverSocket.send(bytes(state["userInput"],"utf-8"))
+			state["sendMessageLock"].release()
 		elif msg == "/allMembers":
-			client.send(b"/allMembers")
-			client.recv(1024).decode("utf-8")
-			client.send(pickle.dumps(groups[groupname].allMembers))
+			serverSocket.send(bytes(".","utf-8"))
+			data = pickle.loads(serverSocket.recv(1024))
+			print("All Group Members:")
+			for element in data:
+				print(element)
 		elif msg == "/onlineMembers":
-			client.send(b"/onlineMembers")
-			client.recv(1024).decode("utf-8")
-			client.send(pickle.dumps(groups[groupname].onlineMembers))
+			serverSocket.send(bytes(".","utf-8"))
+			data = pickle.loads(serverSocket.recv(1024))
+			print("Online Group Members:")
+			for element in data:
+				print(element)
 		elif msg == "/changeAdmin":
-			client.send(b"/changeAdmin")
-			client.recv(1024).decode("utf-8")
-			if username == groups[groupname].admin:
-				client.send(b"/proceed")
-				newAdminUsername = client.recv(1024).decode("utf-8")
-				if newAdminUsername in groups[groupname].allMembers:
-					groups[groupname].admin = newAdminUsername
-					print("New Admin:",newAdminUsername,"| Group:",groupname)
-					client.send(b"Your adminship is now transferred to the specified user.")
-				else:
-					client.send(b"The user is not a member of this group.")
+			serverSocket.send(bytes(".","utf-8"))
+			response = serverSocket.recv(1024).decode("utf-8")
+			if response == "/proceed":
+				state["inputMessage"] = False
+				print("Please enter the username of the new admin: ")
+				with state["inputCondition"]:
+					state["inputCondition"].wait()
+				state["inputMessage"] = True
+				serverSocket.send(bytes(state["userInput"],"utf-8"))
+				print(serverSocket.recv(1024).decode("utf-8"))
 			else:
-				client.send(b"You're not an admin.")
+				print(response)
 		elif msg == "/whoAdmin":
-			client.send(b"/whoAdmin")
-			groupname = client.recv(1024).decode("utf-8")
-			client.send(bytes("Admin: "+groups[groupname].admin,"utf-8"))
+			serverSocket.send(bytes(state["groupname"],"utf-8"))
+			print(serverSocket.recv(1024).decode("utf-8"))
 		elif msg == "/kickMember":
-			client.send(b"/kickMember")
-			client.recv(1024).decode("utf-8")
-			if username == groups[groupname].admin:
-				client.send(b"/proceed")
-				usernameToKick = client.recv(1024).decode("utf-8")
-				if usernameToKick in groups[groupname].allMembers:
-					groups[groupname].allMembers.remove(usernameToKick)
-					if usernameToKick in groups[groupname].onlineMembers:
-						groups[groupname].clients[usernameToKick].send(b"/kicked")
-						groups[groupname].onlineMembers.remove(usernameToKick)
-						del groups[groupname].clients[usernameToKick]
-					print("User Removed:",usernameToKick,"| Group:",groupname)
-					client.send(b"The specified user is removed from the group.")
-				else:
-					client.send(b"The user is not a member of this group.")
+			serverSocket.send(bytes(".","utf-8"))
+			response = serverSocket.recv(1024).decode("utf-8")
+			if response == "/proceed":
+				state["inputMessage"] = False
+				print("Please enter the username to kick: ")
+				with state["inputCondition"]:
+					state["inputCondition"].wait()
+				state["inputMessage"] = True
+				serverSocket.send(bytes(state["userInput"],"utf-8"))
+				print(serverSocket.recv(1024).decode("utf-8"))
 			else:
-				client.send(b"You're not an admin.")
+				print(response)
+		elif msg == "/kicked":
+			state["alive"] = False
+			state["inputMessage"] = False
+			print("You have been kicked. Press any key to quit.")
+			break
 		elif msg == "/fileTransfer":
-			client.send(b"/fileTransfer")
-			filename = client.recv(1024).decode("utf-8")
-			if filename == "~error~":
+			state["inputMessage"] = False
+			print("Please enter the filename: ")
+			with state["inputCondition"]:
+				state["inputCondition"].wait()
+			state["inputMessage"] = True
+			filename = state["userInput"]
+			try:
+				f = open(filename,'rb')
+				f.close()
+			except FileNotFoundError:
+				print("The requested file does not exist.")
+				serverSocket.send(bytes("~error~","utf-8"))
 				continue
-			client.send(b"/sendFile")
-			remaining = int.from_bytes(client.recv(4),'big')
+			serverSocket.send(bytes(filename,"utf-8"))
+			serverSocket.recv(1024)
+			print("Uploading file to server...")
+			with open(filename,'rb') as f:
+				data = f.read()
+				dataLen = len(data)
+				serverSocket.send(dataLen.to_bytes(4,'big'))
+				serverSocket.send(data)
+			print(serverSocket.recv(1024).decode("utf-8"))
+		elif msg == "/receiveFile":
+			print("Receiving shared group file...")
+			serverSocket.send(b"/sendFilename")
+			filename = serverSocket.recv(1024).decode("utf-8")
+			serverSocket.send(b"/sendFile")
+			remaining = int.from_bytes(serverSocket.recv(4),'big')
 			f = open(filename,"wb")
 			while remaining:
-				data = client.recv(min(remaining,4096))
+				data = serverSocket.recv(min(remaining,4096))
 				remaining -= len(data)
 				f.write(data)
 			f.close()
-			print("File received:",filename,"| User:",username,"| Group:",groupname)
-			for member in groups[groupname].onlineMembers:
-				if member != username:
-					memberClient = groups[groupname].clients[member]
-					memberClient.send(b"/receiveFile")
-					with fileTransferCondition:
-						fileTransferCondition.wait()
-					memberClient.send(bytes(filename,"utf-8"))
-					with fileTransferCondition:
-						fileTransferCondition.wait()
-					with open(filename,'rb') as f:
-						data = f.read()
-						dataLen = len(data)
-						memberClient.send(dataLen.to_bytes(4,'big'))
-						memberClient.send(data)
-			client.send(bytes(filename+" successfully sent to all online group members.","utf-8"))
-			print("File sent",filename,"| Group: ",groupname)
-			os.remove(filename)
-		elif msg == "/sendFilename" or msg == "/sendFile":
-			with fileTransferCondition:
-				fileTransferCondition.notify()
+			print("Received file saved as",filename)
 		else:
-			print("UNIDENTIFIED COMMAND:",msg)
-def handshake(client):
-	username = client.recv(1024).decode("utf-8")
-	client.send(b"/sendGroupname")
-	groupname = client.recv(1024).decode("utf-8")
-	if groupname in groups:
-		if username in groups[groupname].allMembers:
-			groups[groupname].connect(username,client)
-			client.send(b"/ready")
-			print("User Connected:",username,"| Group:",groupname)
-		else:
-			groups[groupname].joinRequests.add(username)
-			groups[groupname].waitClients[username] = client
-			groups[groupname].sendMessage(username+" has requested to join the group.","PyconChat")
-			client.send(b"/wait")
-			print("Join Request:",username,"| Group:",groupname)
-		threading.Thread(target=pyconChat, args=(client, username, groupname,)).start()
-	else:
-		groups[groupname] = Group(username,client)
-		threading.Thread(target=pyconChat, args=(client, username, groupname,)).start()
-		client.send(b"/adminReady")
-		print("New Group:",groupname,"| Admin:",username)
+			print(msg)
+
+def userInput(serverSocket):
+	while state["alive"]:
+		state["sendMessageLock"].acquire()
+		state["userInput"] = input()
+		state["sendMessageLock"].release()
+		with state["inputCondition"]:
+			state["inputCondition"].notify()
+		if state["userInput"] == "/1":
+			serverSocket.send(b"/viewRequests")
+		elif state["userInput"] == "/2":
+			serverSocket.send(b"/approveRequest")
+		elif state["userInput"] == "/3":
+			serverSocket.send(b"/disconnect")
+			break
+		elif state["userInput"] == "/4":
+			serverSocket.send(b"/allMembers")
+		elif state["userInput"] == "/5":
+			serverSocket.send(b"/onlineMembers")
+		elif state["userInput"] == "/6":
+			serverSocket.send(b"/changeAdmin")
+		elif state["userInput"] == "/7":
+			serverSocket.send(b"/whoAdmin")
+		elif state["userInput"] == "/8":
+			serverSocket.send(b"/kickMember")
+		elif state["userInput"] == "/9":
+			serverSocket.send(b"/fileTransfer")
+		elif state["inputMessage"]:
+			state["sendMessageLock"].acquire()
+			serverSocket.send(b"/messageSend")
+
+def waitServerListen(serverSocket):
+	while not state["alive"]:
+		msg = serverSocket.recv(1024).decode("utf-8")
+		if msg == "/accepted":
+			state["alive"] = True
+			print("Your join request has been approved. Press any key to begin chatting.")
+			break
+		elif msg == "/waitDisconnect":
+			state["joinDisconnect"] = True
+			break
+
+def waitUserInput(serverSocket):
+	while not state["alive"]:
+		state["userInput"] = input()
+		if state["userInput"] == "/1" and not state["alive"]:
+			serverSocket.send(b"/waitDisconnect")
+			break
 
 def main():
 	if len(sys.argv) < 3:
-		print("USAGE: python server.py <IP> <Port>")
-		print("EXAMPLE: python server.py localhost 8000")
+		print("USAGE: python client.py <IP> <Port>")
+		print("EXAMPLE: python client.py localhost 8000")
 		return
-	listenSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	listenSocket.bind((sys.argv[1], int(sys.argv[2])))
-	listenSocket.listen(10)
-	print("PyconChat Server running")
+	serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+	serverSocket.connect((sys.argv[1], int(sys.argv[2])))
+	state["inputCondition"] = threading.Condition()
+	state["sendMessageLock"] = threading.Lock()
+	state["username"] = input("Welcome to TChat! Please enter your username: ")
+	state["groupname"] = input("Please enter the name of the group: ")
+	state["alive"] = False
+	state["joinDisconnect"] = False
+	state["inputMessage"] = True
+	serverSocket.send(bytes(state["username"],"utf-8"))
+	serverSocket.recv(1024)
+	serverSocket.send(bytes(state["groupname"],"utf-8"))
+	response = serverSocket.recv(1024).decode("utf-8")
+	if response == "/adminReady":
+		print("You have created the group",state["groupname"],"and are now an admin.")
+		state["alive"] = True
+	elif response == "/ready":
+		print("You have joined the group",state["groupname"])
+		state["alive"] = True
+	elif response == "/wait":
+		print("Your request to join the group is pending admin approval.")
+		print("Available Commands:\n/1 -> Disconnect\n")
+	waitUserInputThread = threading.Thread(target=waitUserInput,args=(serverSocket,))
+	waitServerListenThread = threading.Thread(target=waitServerListen,args=(serverSocket,))
+	userInputThread = threading.Thread(target=userInput,args=(serverSocket,))
+	serverListenThread = threading.Thread(target=serverListen,args=(serverSocket,))
+	waitUserInputThread.start()
+	waitServerListenThread.start()
 	while True:
-		client,_ = listenSocket.accept()
-		threading.Thread(target=handshake, args=(client,)).start()
+		if state["alive"] or state["joinDisconnect"]:
+			break
+	if state["alive"]:
+		print("Available Commands:\n/1 -> View Join Requests (Admins)\n/2 -> Approve Join Requests (Admin)\n/3 -> Disconnect\n/4 -> View All Members\n/5 -> View Online Group Members\n/6 -> Transfer Adminship\n/7 -> Check Group Admin\n/8 -> Kick Member\n/9 -> File Transfer\nType anything else to send a message \n")
+		waitUserInputThread.join()
+		waitServerListenThread.join()
+		userInputThread.start()
+		serverListenThread.start()
+	while True:
+		if state["joinDisconnect"]:
+			serverSocket.shutdown(socket.SHUT_RDWR)
+			serverSocket.close()
+			waitUserInputThread.join()
+			waitServerListenThread.join()
+			print("Disconnected from TChat.")
+			break
+		elif not state["alive"]:
+			serverSocket.shutdown(socket.SHUT_RDWR)
+			serverSocket.close()
+			userInputThread.join()
+			serverListenThread.join()
+			print("Disconnected from TChat.")
+			break
 
 if __name__ == "__main__":
 	main()
