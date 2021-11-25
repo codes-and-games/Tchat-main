@@ -82,3 +82,13 @@ Kick members
 View group admin
 
 If a user enters a group name which does not exist, a new group with the user as admin is automatically created.
+
+# Credits
+
+A special thanks to StackOverFlow and GeeksForGeeks. 😂
+and also..
+Thanks UsmanJafri for inspiring me to do this project as you have one named PyconChat
+
+### Links
+
+UsmanJafri: https://github.com/UsmanJafri
