@@ -49,20 +49,36 @@ Open a terminal window in the directory containing server.py and run the followi
 python server.py localhost 8000
 
 Replace localhost with your IP and 8000 with a TCP port number of your choice.
+
 The server console will display logs for:
-New group creation
-User connection
-User disconnection
-User kick
-Admin transfer
-Join request
-Join request approval
-File transfer
-Features
+
+1)New group creation
+
+2)User connection
+
+3)User disconnection
+
+4)User kick
+
+5)Admin transfer
+
+6)Join request
+
+7)Join request approval
+
+8)File transfer
+
+### Features
 File sharing
+
 View online group members
+
 View all group members
+
 Transfer admin privilege
+
 Kick members
+
 View group admin
+
 If a user enters a group name which does not exist, a new group with the user as admin is automatically created.
