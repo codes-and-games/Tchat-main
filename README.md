@@ -6,14 +6,14 @@ Requirements:
   Python 3
   
 # Instructions (Client)
-1)Open a terminal window in the directory containing client.py and run the following command:
+1) Open a terminal window in the directory containing client.py and run the following command:
   python client.py localhost 8000
 
-2)Replace localhost with your IP and 8000 with a TCP port number of your choice.
+2) Replace localhost with your IP and 8000 with a TCP port number of your choice.
 
-3)A prompt to enter a username will appear. Enter a username and press enter.
+3) A prompt to enter a username will appear. Enter a username and press enter.
 
-4)Next, a prompt to enter a group name will appear. Enter a group name and press enter.
+4) Next, a prompt to enter a group name will appear. Enter a group name and press enter.
 
 Note:
 If a group with the specified name does not exist, a new group is automatically created with the current user as admin. Otherwise, a join request is sent to the current group admin.
@@ -52,21 +52,21 @@ Replace localhost with your IP and 8000 with a TCP port number of your choice.
 
 The server console will display logs for:
 
-1)New group creation
+1) New group creation
 
-2)User connection
+2) User connection
 
-3)User disconnection
+3) User disconnection
 
-4)User kick
+4) User kick
 
-5)Admin transfer
+5) Admin transfer
 
-6)Join request
+6) Join request
 
-7)Join request approval
+7) Join request approval
 
-8)File transfer
+8) File transfer
 
 ### Features
 File sharing
@@ -86,7 +86,9 @@ If a user enters a group name which does not exist, a new group with the user as
 # Credits
 
 A special thanks to StackOverFlow and GeeksForGeeks. 😂
+
 and also..
+
 Thanks UsmanJafri for inspiring me to do this project as you have one named PyconChat
 
 ### Links
