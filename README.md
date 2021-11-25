@@ -43,7 +43,7 @@ Type anything to send a message or use the following commands:
 
 ** = Admin only action	
 
-## As this is a Open-Source Project, feel free to commit changes in this Pro developers.
+### Note: As this is a Open-Source Project, feel free to commit changes in this Pro developers.
 
 # Instructions (Server)
 Open a terminal window in the directory containing server.py and run the following command:
