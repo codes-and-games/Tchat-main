@@ -22,14 +22,23 @@ If a group with the specified name does not exist, a new group is automatically 
 Type anything to send a message or use the following commands:
 Command	Behaviour
 /1	View pending join requests**
+
 /2	Approve pending join requests**
+
 /3	Disconnect
+
 /4	View all group members
+
 /5	View online group members
+
 /6	Transfer adminship**
+
 /7	View group admin
+
 /8	Kick member**
+
 /9	Send a file to group
+
 ** = Admin only action	
 
 
