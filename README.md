@@ -89,8 +89,8 @@ A special thanks to StackOverFlow and GeeksForGeeks. 😂
 
 and also..
 
-Thanks UsmanJafri for inspiring me to do this project as you have one named PyconChat
+Thanks Joseph Marc Antony for inspiring me to do this project as this was one of your amazing ideas.
 
 ### Links
 
-UsmanJafri: https://github.com/UsmanJafri
+Joseph Marc Antony's GitHub: https://github.com/jmarcantony
