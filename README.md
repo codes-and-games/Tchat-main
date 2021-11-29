@@ -6,8 +6,8 @@ Requirements:
   Python 3
   
 # Instructions (Client)
-1) Open a terminal window in the directory containing client.py and run the following command:
-  python client.py localhost 8000
+1) Open a terminal window in the client directory containing main.py and run the following command:
+  python main.py localhost 8000
 
 2) Replace localhost with your IP and 8000 with a TCP port number of your choice.
 
@@ -46,8 +46,9 @@ Type anything to send a message or use the following commands:
 ### Note: As this is a Open-Source Project, feel free to commit changes in this Pro developers.
 
 # Instructions (Server)
-Open a terminal window in the directory containing server.py and run the following command:
-python server.py localhost 8000
+Open a terminal window in the server directory containing main.py and run the following command:
+
+python main.py localhost 8000
 
 Replace localhost with your IP and 8000 with a TCP port number of your choice.
 
