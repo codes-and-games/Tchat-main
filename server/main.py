@@ -184,8 +184,8 @@ def handshake(client):
 
 def main():
 	if len(sys.argv) < 3:
-		print("USAGE: python server.py <IP> <Port>")
-		print("EXAMPLE: python server.py localhost 8000")
+		print("USAGE: python main.py <IP> <Port>")
+		print("EXAMPLE: python main.py localhost 8000")
 		return
 	listenSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	listenSocket.bind((sys.argv[1], int(sys.argv[2])))
