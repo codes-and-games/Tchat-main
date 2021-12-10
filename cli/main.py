@@ -177,8 +177,8 @@ def waitUserInput(serverSocket):
 
 def main():
 	if len(sys.argv) < 3:
-		print("USAGE: python client.py <IP> <Port>")
-		print("EXAMPLE: python client.py localhost 8000")
+		print("USAGE: python main.py <IP> <Port>")
+		print("EXAMPLE: python main.py localhost 8000")
 		return
 	serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 	serverSocket.connect((sys.argv[1], int(sys.argv[2])))
