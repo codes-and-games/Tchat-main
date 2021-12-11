@@ -5,6 +5,10 @@ Python Console Chat - A Python chat application featuring group conversations an
 Requirements:
   Python 3
   
+#Video Tut:
+https://user-images.githubusercontent.com/86508458/145670452-ac4ebc2c-838c-4471-82a2-086a02497ec3.mp4
+
+  
 # Instructions (Client)
 1) Open a terminal window in the client directory containing main.py and run the following command:
   python main.py localhost 8000
@@ -17,6 +21,7 @@ Requirements:
 
 Note:
 If a group with the specified name does not exist, a new group is automatically created with the current user as admin. Otherwise, a join request is sent to the current group admin.
+
 
 
 Type anything to send a message or use the following commands:
