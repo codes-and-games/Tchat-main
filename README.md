@@ -6,7 +6,7 @@ Requirements:
   Python 3
   
 # Video Tut:
-[![Watch the video](https://user-images.githubusercontent.com/86508458/145670452-ac4ebc2c-838c-4471-82a2-086a02497ec3.mp4)
+[Watch the video](https://user-images.githubusercontent.com/86508458/145670452-ac4ebc2c-838c-4471-82a2-086a02497ec3.mp4)
 
   
 # Instructions (Client)
